@@ -1,6 +1,8 @@
 use std::io;
 use std::time::{Duration, Instant};
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 use crossterm::event::{self, Event, KeyCode};
 use crossterm::terminal::{self, EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::ExecutableCommand;
@@ -176,6 +178,12 @@ fn ui(frame: &mut Frame, app: &App) {
 }
 
 fn main() -> io::Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--version" || a == "-V") {
+        println!("breathe478 {VERSION}");
+        return Ok(());
+    }
+
     terminal::enable_raw_mode()?;
     io::stdout().execute(EnterAlternateScreen)?;
 
