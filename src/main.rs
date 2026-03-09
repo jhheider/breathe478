@@ -3,13 +3,17 @@ use std::time::{Duration, Instant};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-use crossterm::event::{self, Event, KeyCode};
-use crossterm::terminal::{self, EnterAlternateScreen, LeaveAlternateScreen};
-use crossterm::ExecutableCommand;
-use ratatui::layout::{Alignment, Constraint, Layout};
-use ratatui::style::{Color, Style};
-use ratatui::widgets::{Block, Clear, Gauge, Paragraph};
-use ratatui::Frame;
+use crossterm::{
+    ExecutableCommand,
+    event::{self, Event, KeyCode},
+    terminal::{self, EnterAlternateScreen},
+};
+use ratatui::{
+    Frame,
+    layout::{Alignment, Constraint, Layout},
+    style::{Color, Style},
+    widgets::{Block, Gauge, Paragraph},
+};
 
 #[derive(Clone, Copy)]
 enum Phase {
@@ -65,7 +69,6 @@ struct App {
     phase_start: Instant,
     app_start: Instant,
     cycles_completed: u32,
-    running: bool,
 }
 
 impl App {
@@ -76,7 +79,6 @@ impl App {
             phase_start: now,
             app_start: now,
             cycles_completed: 0,
-            running: true,
         }
     }
 
@@ -119,9 +121,7 @@ fn ui(frame: &mut Frame, app: &App) {
 
     // Fill entire background with phase color
     let area = frame.area();
-    frame.render_widget(Clear, area);
-    let bg_block = Block::default().style(Style::new().bg(color));
-    frame.render_widget(bg_block, area);
+    frame.render_widget(Block::default().style(Style::new().bg(color)), area);
 
     let chunks = Layout::vertical([
         Constraint::Percentage(30),
@@ -193,15 +193,10 @@ fn main() -> io::Result<()> {
     loop {
         terminal.draw(|f| ui(f, &app))?;
 
-        if event::poll(Duration::from_millis(50))? {
-            if let Event::Key(key) = event::read()? {
-                if key.code == KeyCode::Char('q') || key.code == KeyCode::Esc {
-                    app.running = false;
-                }
-            }
-        }
-
-        if !app.running {
+        if event::poll(Duration::from_millis(50))?
+            && let Event::Key(key) = event::read()?
+            && (key.code == KeyCode::Char('q') || key.code == KeyCode::Esc)
+        {
             break;
         }
 
@@ -209,8 +204,5 @@ fn main() -> io::Result<()> {
     }
 
     ratatui::restore();
-    io::stdout().execute(LeaveAlternateScreen)?;
-    terminal::disable_raw_mode()?;
-
     Ok(())
 }
